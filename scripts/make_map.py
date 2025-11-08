@@ -140,4 +140,6 @@ m.save("usf_parking_heatmap.html")
 print("\n✅ Heatmap saved: usf_parking_heatmap.html")
 print(f"📍 Total tickets mapped: {len(heat_data)}")
 
-webbrowser.open("usf_parking_heatmap.html")
+folium.Html("usf_parking_current_status.html").add_to(m)
+m.save("usf_combined.html")
+webbrowser.open("usf_combined.html")
