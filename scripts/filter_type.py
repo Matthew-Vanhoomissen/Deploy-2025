@@ -6,4 +6,8 @@ desired_types = ["STR CLEAN", "PRK PROHIB", "PKG PROHIB", "NO PRK ZN", "DISOB SI
 
 df_filtered = df[df["violation_desc"].isin(desired_types)]
 
+unique_addresses = df_filtered["citation_location"].nunique()
+
+print("Unique addresses:", unique_addresses)
+
 df_filtered.to_csv("../data/filtered_data.csv")
