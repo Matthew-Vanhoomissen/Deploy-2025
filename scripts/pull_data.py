@@ -17,7 +17,7 @@ client = Socrata("data.sfgov.org", APP_TOKEN)
 #                  username="user@example.com",
 #                  password="AFakePassword")
 
-# First 2000 results, returned as JSON from API / converted to Python list of
+# First 200000 results, returned as JSON from API / converted to Python list of
 # dictionaries by sodapy.
 results = client.get("ab4h-6ztd", where="citation_issued_datetime >= '2025-10-01T00:00:00'", limit=200000)
 result = client.get(
@@ -30,6 +30,11 @@ df = pd.DataFrame.from_records(results)
 
 df["citation_issued_datetime"] = pd.to_datetime(df["citation_issued_datetime"], errors="coerce")
 df["year"] = df["citation_issued_datetime"].dt.year
+
+violation_types = df["violation"].dropna().unique().tolist()
+
+print(violation_types)
+print(f"Total unique violations: {len(violation_types)}")
 
 df_2025 = df[df["year"] == 2025]
 
