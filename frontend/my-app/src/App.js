@@ -3,9 +3,8 @@ import "./App.css";
 
 const App = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [activeTab, setActiveTab] = useState("map"); // default tab is Map
+  const [activeTab, setActiveTab] = useState("map");
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest(".tab")) {
@@ -27,48 +26,51 @@ const App = () => {
 
   return (
     <div className="app-container">
+      {/* Floating Header */}
       <header className="app-header">
         <div className="header-left">
           <div className="app-logo">
-            <img src="logo1.png" alt="Logo" />
+            <img src="/logo1.png" alt="Logo" />
           </div>
           <h1 className="app-title">Dons Parking Support</h1>
         </div>
 
         <div className="tab-bar">
-          <div className="tab" onClick={() => handleTabClick("map")}>
+          <div
+            className={`tab ${activeTab === "map" ? "active" : ""}`}
+            onClick={() => handleTabClick("map")}
+          >
             Map
           </div>
 
-          <div className="tab" onClick={() => handleTabClick("settings")}>
+          <div
+            className={`tab ${openDropdown === "settings" ? "active" : ""}`}
+            onClick={() => handleTabClick("settings")}
+          >
             Settings
             <div className={`tab-dropdown ${openDropdown === "settings" ? "active" : ""}`}>
-              <button onClick={() => alert("Option 1 clicked")}>Option 1</button>
-              <button onClick={() => alert("Option 2 clicked")}>Option 2</button>
-              <button onClick={() => alert("Option 3 clicked")}>Option 3</button>
+              <button>Option 1</button>
+              <button>Option 2</button>
+              <button>Option 3</button>
             </div>
           </div>
 
-          <div className="tab" onClick={() => handleTabClick("info")}>
+          <div
+            className={`tab ${openDropdown === "info" ? "active" : ""}`}
+            onClick={() => handleTabClick("info")}
+          >
             Info
             <div className={`tab-dropdown ${openDropdown === "info" ? "active" : ""}`}>
-              <button onClick={() => alert("About clicked")}>About</button>
-              <button onClick={() => alert("Help clicked")}>Help</button>
+              <button>About</button>
+              <button>Help</button>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Map Background */}
       <div className="map-container">
-        {activeTab === "map" && (
-          <iframe
-            src="/map.html"
-            title="Folium Map"
-            width="100%"
-            height="100%"
-            style={{ border: "none" }}
-          />
-        )}
+        {activeTab === "map" && <iframe src="/map.html" title="Folium Map" />}
       </div>
     </div>
   );
