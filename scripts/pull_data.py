@@ -19,8 +19,18 @@ client = Socrata("data.sfgov.org", APP_TOKEN)
 
 # First 2000 results, returned as JSON from API / converted to Python list of
 # dictionaries by sodapy.
-results = client.get("ab4h-6ztd", limit=20)
-
+results = client.get("ab4h-6ztd", where="citation_issued_datetime >= '2025-10-01T00:00:00'", limit=200000)
+result = client.get(
+    "ab4h-6ztd",
+    select="max(citation_issued_datetime)"
+)
+print(result)
 # Convert to pandas DataFrame
-results_df = pd.DataFrame.from_records(results)
-results_df.to_csv("../data/ticket_data.csv")
+df = pd.DataFrame.from_records(results)
+
+df["citation_issued_datetime"] = pd.to_datetime(df["citation_issued_datetime"], errors="coerce")
+df["year"] = df["citation_issued_datetime"].dt.year
+
+df_2025 = df[df["year"] == 2025]
+
+df_2025.to_csv("../data/ticket_data.csv")
