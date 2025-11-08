@@ -1,39 +1,129 @@
-body, html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: "Inter", sans-serif;
-  background-color: #f3f4f6;
-}
+/* App.css */
+
+/* Import nice font */
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;600&display=swap');
 
 .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  font-family: 'Lexend Deca', sans-serif;
+  color: #f0f4f3;
+  background: #004d40;
 }
 
 .app-header {
-  background-color: #004d40;
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+
+  /* Floating pill-style header */
+  background: rgba(0, 77, 64, 0.85);
+  backdrop-filter: blur(10px) saturate(180%);
+  border-radius: 40px; /* half the height for smooth pill shape */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+
+  position: absolute;  /* float over map */
+  top: 20px;           /* vertical position from top */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 160px); /* horizontal margins */
+  z-index: 20;         /* on top of map */
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.map-container {
-  flex: 1;
+.app-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0; /* prevent shrinking */
+}
+
+.app-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* keeps image aspect ratio */
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #f0f4f3;
+}
+
+.tab-bar {
   display: flex;
-  justify-content: center;
+  gap: 1rem;
+  position: relative;
   align-items: center;
 }
 
-.map-container > div {
-  height: 90%;
-  width: 95%;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+.tab {
+  position: relative;
+  padding: 0.5rem 1rem;
+  background: rgba(46, 125, 50, 0.7);
+  border-radius: 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.3s ease;
+}
+
+.tab:hover {
+  background: rgba(27, 94, 32, 0.85);
+}
+
+.tab-dropdown {
+  position: absolute;
+  top: 110%; /* slightly below header */
+  right: 0;
+  background: rgba(0, 77, 64, 0.95);
+  color: white;
+  min-width: 200px;
+  border-radius: 1rem;
+  padding: 0.5rem 0;
+  display: none;
+  flex-direction: column;
+  z-index: 25;
+}
+
+.tab-dropdown.active {
+  display: flex;
+}
+
+.tab-dropdown button {
+  all: unset;
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.tab-dropdown button:hover {
+  background: rgba(27, 94, 32, 0.85);
+}
+
+/* Map container fills remaining space */
+.map-container {
+  flex: 1; /* fill the rest of the screen */
+  width: 100%;
+  position: relative;
+}
+
+.map-wrapper {
+  width: 100%;
+  height: 100%;
 }
