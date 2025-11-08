@@ -249,7 +249,7 @@ const App = () => {
 
       {/* Map Background */}
       <div className="map-container">
-        <iframe src="/map.html" title="Folium Map" />
+        <iframe src="/maps/Home_Map.html" title="Folium Map" />
       </div>
     </div>
   );
