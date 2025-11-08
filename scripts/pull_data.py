@@ -31,10 +31,7 @@ df = pd.DataFrame.from_records(results)
 df["citation_issued_datetime"] = pd.to_datetime(df["citation_issued_datetime"], errors="coerce")
 df["year"] = df["citation_issued_datetime"].dt.year
 
-violation_types = df["violation"].dropna().unique().tolist()
 
-print(violation_types)
-print(f"Total unique violations: {len(violation_types)}")
 
 df_2025 = df[df["year"] == 2025]
 
