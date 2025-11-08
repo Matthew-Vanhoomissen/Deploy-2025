@@ -1,0 +1,39 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Inter", sans-serif;
+  background-color: #f3f4f6;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  background-color: #004d40;
+  color: white;
+  text-align: center;
+  padding: 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.map-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.map-container > div {
+  height: 90%;
+  width: 95%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
