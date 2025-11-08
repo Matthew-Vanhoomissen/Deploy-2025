@@ -4,10 +4,16 @@ import "./App.css";
 const App = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [activeTab, setActiveTab] = useState("map");
+  const [filters, setFilters] = useState({
+    availability: "all",
+    priceRange: "all",
+    distance: "all",
+    parkingType: "all"
+  });
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".tab")) {
+      if (!e.target.closest(".tab") && !e.target.closest(".filter-modal") && !e.target.closest(".info-modal")) {
         setOpenDropdown(null);
       }
     };
@@ -16,12 +22,35 @@ const App = () => {
   }, []);
 
   const handleTabClick = (tab) => {
+    console.log("Tab clicked:", tab, "Current openDropdown:", openDropdown);
     if (tab === "map") {
       setActiveTab("map");
       setOpenDropdown(null);
     } else {
       setOpenDropdown(openDropdown === tab ? null : tab);
+      setActiveTab(tab);
     }
+  };
+
+  const closeModal = () => {
+    setOpenDropdown(null);
+    setActiveTab("map");
+  };
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      availability: "all",
+      priceRange: "all",
+      distance: "all",
+      parkingType: "all"
+    });
   };
 
   return (
@@ -34,7 +63,6 @@ const App = () => {
           </div>
           <h1 className="app-title">Dons Parking Support</h1>
         </div>
-
         <div className="tab-bar">
           <div
             className={`tab ${activeTab === "map" ? "active" : ""}`}
@@ -42,35 +70,186 @@ const App = () => {
           >
             Map
           </div>
-
           <div
-            className={`tab ${openDropdown === "settings" ? "active" : ""}`}
-            onClick={() => handleTabClick("settings")}
+            className={`tab ${openDropdown === "filters" ? "active" : ""}`}
+            onClick={() => handleTabClick("filters")}
           >
-            Settings
-            <div className={`tab-dropdown ${openDropdown === "settings" ? "active" : ""}`}>
-              <button>Option 1</button>
-              <button>Option 2</button>
-              <button>Option 3</button>
-            </div>
+            Filters
           </div>
-
           <div
             className={`tab ${openDropdown === "info" ? "active" : ""}`}
             onClick={() => handleTabClick("info")}
           >
             Info
-            <div className={`tab-dropdown ${openDropdown === "info" ? "active" : ""}`}>
-              <button>About</button>
-              <button>Help</button>
-            </div>
           </div>
         </div>
       </header>
 
+      {/* Filter Modal */}
+      {openDropdown === "filters" && (
+        <>
+          <div className="modal-overlay" onClick={closeModal}></div>
+          <div className="filter-modal">
+            <div className="modal-header">
+              <h2>Filter Parking Spots</h2>
+              <button className="close-modal" onClick={closeModal}>✕</button>
+            </div>
+            
+            <div className="filter-grid">
+              <div className="filter-section">
+                <div className="section-title">Availability</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.availability === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("availability", "all")}
+                  >
+                    All Spots
+                  </button>
+                  <button
+                    className={filters.availability === "available" ? "selected" : ""}
+                    onClick={() => handleFilterChange("availability", "available")}
+                  >
+                    Available Only
+                  </button>
+                  <button
+                    className={filters.availability === "occupied" ? "selected" : ""}
+                    onClick={() => handleFilterChange("availability", "occupied")}
+                  >
+                    Occupied
+                  </button>
+                </div>
+              </div>
+
+              <div className="filter-section">
+                <div className="section-title">Price Range</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.priceRange === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "all")}
+                  >
+                    All Prices
+                  </button>
+                  <button
+                    className={filters.priceRange === "free" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "free")}
+                  >
+                    Free
+                  </button>
+                  <button
+                    className={filters.priceRange === "low" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "low")}
+                  >
+                    $ Low ($0-5)
+                  </button>
+                  <button
+                    className={filters.priceRange === "medium" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "medium")}
+                  >
+                    $ Medium ($5-15)
+                  </button>
+                  <button
+                    className={filters.priceRange === "high" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "high")}
+                  >
+                    $$ High ($15+)
+                  </button>
+                </div>
+              </div>
+
+              <div className="filter-section">
+                <div className="section-title">Distance</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.distance === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "all")}
+                  >
+                    Any Distance
+                  </button>
+                  <button
+                    className={filters.distance === "near" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "near")}
+                  >
+                    Within 0.5 mi
+                  </button>
+                  <button
+                    className={filters.distance === "medium" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "medium")}
+                  >
+                    Within 1 mi
+                  </button>
+                  <button
+                    className={filters.distance === "far" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "far")}
+                  >
+                    Within 2 mi
+                  </button>
+                </div>
+              </div>
+
+              <div className="filter-section">
+                <div className="section-title">Parking Type</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.parkingType === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "all")}
+                  >
+                    All Types
+                  </button>
+                  <button
+                    className={filters.parkingType === "garage" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "garage")}
+                  >
+                    🏢 Garage
+                  </button>
+                  <button
+                    className={filters.parkingType === "lot" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "lot")}
+                  >
+                    🅿️ Parking Lot
+                  </button>
+                  <button
+                    className={filters.parkingType === "street" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "street")}
+                  >
+                    🛣️ Street Parking
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="reset-button" onClick={resetFilters}>
+                Reset All Filters
+              </button>
+              <button className="apply-button" onClick={closeModal}>
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Info Modal */}
+      {openDropdown === "info" && (
+        <>
+          <div className="modal-overlay" onClick={closeModal}></div>
+          <div className="info-modal">
+            <div className="modal-header">
+              <h2>Information</h2>
+              <button className="close-modal" onClick={closeModal}>✕</button>
+            </div>
+            <div className="info-content">
+              <button className="info-item">About</button>
+              <button className="info-item">Help</button>
+              <button className="info-item">Contact</button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Map Background */}
       <div className="map-container">
-        {activeTab === "map" && <iframe src="/map.html" title="Folium Map" />}
+        <iframe src="/map.html" title="Folium Map" />
       </div>
     </div>
   );
