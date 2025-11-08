@@ -8,7 +8,8 @@ const App = () => {
     availability: "all",
     priceRange: "all",
     distance: "all",
-    parkingType: "all"
+    parkingType: "all",
+    mapView: "standard"
   });
 
   useEffect(() => {
@@ -49,7 +50,8 @@ const App = () => {
       availability: "all",
       priceRange: "all",
       distance: "all",
-      parkingType: "all"
+      parkingType: "all",
+      mapView: "standard"
     });
   };
 
@@ -96,6 +98,30 @@ const App = () => {
             </div>
             
             <div className="filter-grid">
+              <div className="filter-section">
+                <div className="section-title">Map View</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.mapView === "standard" ? "selected" : ""}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFilterChange("mapView", "standard");
+                    }}
+                  >
+                    🗺️ Standard Map
+                  </button>
+                  <button
+                    className={filters.mapView === "heatmap" ? "selected" : ""}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFilterChange("mapView", "heatmap");
+                    }}
+                  >
+                    🔥 Heatmap View
+                  </button>
+                </div>
+              </div>
+
               <div className="filter-section">
                 <div className="section-title">Availability</div>
                 <div className="filter-buttons">
@@ -243,13 +269,17 @@ const App = () => {
               <button className="info-item">Help</button>
               <button className="info-item">Contact</button>
             </div>
-          </div>
+          </div>ß
         </>
       )}
 
       {/* Map Background */}
       <div className="map-container">
-        <iframe src="/maps/Home_Map.html" title="Folium Map" />
+        <iframe 
+          src={filters.mapView === "heatmap" ? "/maps/usf_parking_heatmap.html" : "/maps/Home_Map.html"} 
+          title="Map" 
+          key={filters.mapView}
+        />
       </div>
     </div>
   );
