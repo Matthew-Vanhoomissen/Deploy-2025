@@ -1,6 +1,4 @@
-/* App.css */
-
-/* Import nice font */
+/* Import a nice font */
 @import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;600&display=swap');
 
 .app-container {
@@ -8,31 +6,23 @@
   flex-direction: column;
   height: 100vh;
   font-family: 'Lexend Deca', sans-serif;
-  color: #f0f4f3;
-  background: #004d40;
+  color: white;
 }
 
 .app-header {
-  height: 80px;
+  height: 120px;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* title left, tabs right */
   align-items: center;
   padding: 0 2rem;
-
-  /* Floating pill-style header */
   background: rgba(0, 77, 64, 0.85);
-  backdrop-filter: blur(10px) saturate(180%);
-  border-radius: 40px; /* half the height for smooth pill shape */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-
-  position: absolute;  /* float over map */
-  top: 20px;           /* vertical position from top */
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 160px); /* horizontal margins */
-  z-index: 20;         /* on top of map */
+  backdrop-filter: blur(6px);
+  border-bottom: 2px solid #333;
+  border-radius: 1.5rem; /* rounded */
+  position: relative;
+  z-index: 20;
 }
+
 .header-left {
   display: flex;
   align-items: center;
@@ -43,18 +33,18 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
+  background-color: #2e7d32;
   overflow: hidden;
-  flex-shrink: 0; /* prevent shrinking */
 }
 
 .app-logo img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* keeps image aspect ratio */
+  object-fit: cover;
 }
 
 .app-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   margin: 0;
   color: #f0f4f3;
@@ -74,7 +64,6 @@
   border-radius: 1rem;
   cursor: pointer;
   user-select: none;
-  transition: background 0.3s ease;
 }
 
 .tab:hover {
@@ -83,7 +72,7 @@
 
 .tab-dropdown {
   position: absolute;
-  top: 110%; /* slightly below header */
+  top: 100%;
   right: 0;
   background: rgba(0, 77, 64, 0.95);
   color: white;
@@ -118,7 +107,7 @@
 
 /* Map container fills remaining space */
 .map-container {
-  flex: 1; /* fill the rest of the screen */
+  flex: 1 1 auto;
   width: 100%;
   position: relative;
 }
