@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { APIProvider, Map } from "@vis.gl/react-google-maps";
+import React, { useState, useEffect } from "react";
+import "./App.css";
 
 const App = () => {
-  const apiKey = ""; 
-  const mapId = "445ffbbf47289511332744ba";
-  
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [activeTab, setActiveTab] = useState("map");
   const [filters, setFilters] = useState({
     availability: "all",
     priceRange: "all",
@@ -103,98 +102,226 @@ const App = () => {
           </div>
         </div>
       </header>
-      
-      <div style={{ height: "500px" }}>
-        <APIProvider apiKey={apiKey} onLoad={() => console.log("Maps API loaded")}>
-          <Map
-            defaultZoom={16}
-            defaultCenter={{ lat: 37.7749, lng: -122.4521 }}
-            mapId={mapId}
-            style={{ width: "100%", height: "100%" }}
-          />
-        </APIProvider>
-      </div>
 
-      <div style={{ 
-        padding: "2rem",
-        backgroundColor: "#fff",
-        flex: 1,
-        overflowY: "auto"
-      }}>
-        <h2 style={{ marginTop: 0, marginBottom: "1.5rem", color: "#004d40" }}>
-          Filters
-        </h2>
-        
-        <div style={{ marginBottom: "1.5rem" }}>
-          <label style={{ 
-            display: "block", 
-            marginBottom: "0.5rem",
-            fontWeight: "500",
-            color: "#333"
-          }}>
-            Day of the Week:
-          </label>
-          <select 
-            value={filters.permitType}
-            onChange={(e) => setFilters({...filters, permitType: e.target.value})}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "1rem"
-            }}
-          >
-            <option value="all">All Permits</option>
-            <option value="resident">Resident</option>
-            <option value="commuter">Commuter</option>
-            <option value="visitor">Visitor</option>
-          </select>
+      {/* Filter Modal */}
+      {openDropdown === "filters" && (
+        <>
+          <div className="modal-overlay" onClick={closeModal}></div>
+          <div className="filter-modal">
+            <div className="modal-header">
+              <h2>Filter Parking Spots</h2>
+              <button className="close-modal" onClick={closeModal}>✕</button>
+            </div>
+            
+            <div className="filter-grid">
+              <div className="filter-section">
+                <div className="section-title">Map View</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.mapView === "standard" ? "selected" : ""}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "standard"); }}
+                  >
+                    🗺️ Standard Map
+                  </button>
+                  <button
+                    className={filters.mapView === "heatmap" ? "selected" : ""}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "heatmap"); }}
+                  >
+                    🔥 Heatmap View
+                  </button>
+                  <button
+                    className={filters.mapView === "streetHours" ? "selected" : ""}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "streetHours"); }}
+                  >
+                    🛣️ Street Parking Hours
+                  </button>
+                  <button
+                    className={filters.mapView === "combinedView" ? "selected" : ""}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "combinedView"); }}
+                  >
+                    🔗 Combined View
+                  </button>
+                </div>
+              </div>
+
+              {/* Availability */}
+              <div className="filter-section">
+                <div className="section-title">Availability</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.availability === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("availability", "all")}
+                  >
+                    All Spots
+                  </button>
+                  <button
+                    className={filters.availability === "available" ? "selected" : ""}
+                    onClick={() => handleFilterChange("availability", "available")}
+                  >
+                    Available Only
+                  </button>
+                  <button
+                    className={filters.availability === "occupied" ? "selected" : ""}
+                    onClick={() => handleFilterChange("availability", "occupied")}
+                  >
+                    Occupied
+                  </button>
+                </div>
+              </div>
+
+              {/* Price Range */}
+              <div className="filter-section">
+                <div className="section-title">Price Range</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.priceRange === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "all")}
+                  >
+                    All Prices
+                  </button>
+                  <button
+                    className={filters.priceRange === "free" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "free")}
+                  >
+                    Free
+                  </button>
+                  <button
+                    className={filters.priceRange === "low" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "low")}
+                  >
+                    $ Low ($0-5)
+                  </button>
+                  <button
+                    className={filters.priceRange === "medium" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "medium")}
+                  >
+                    $ Medium ($5-15)
+                  </button>
+                  <button
+                    className={filters.priceRange === "high" ? "selected" : ""}
+                    onClick={() => handleFilterChange("priceRange", "high")}
+                  >
+                    $$ High ($15+)
+                  </button>
+                </div>
+              </div>
+
+              {/* Distance */}
+              <div className="filter-section">
+                <div className="section-title">Distance</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.distance === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "all")}
+                  >
+                    Any Distance
+                  </button>
+                  <button
+                    className={filters.distance === "near" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "near")}
+                  >
+                    Within 0.5 mi
+                  </button>
+                  <button
+                    className={filters.distance === "medium" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "medium")}
+                  >
+                    Within 1 mi
+                  </button>
+                  <button
+                    className={filters.distance === "far" ? "selected" : ""}
+                    onClick={() => handleFilterChange("distance", "far")}
+                  >
+                    Within 2 mi
+                  </button>
+                </div>
+              </div>
+
+              {/* Parking Type */}
+              <div className="filter-section">
+                <div className="section-title">Parking Type</div>
+                <div className="filter-buttons">
+                  <button
+                    className={filters.parkingType === "all" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "all")}
+                  >
+                    All Types
+                  </button>
+                  <button
+                    className={filters.parkingType === "garage" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "garage")}
+                  >
+                    🏢 Garage
+                  </button>
+                  <button
+                    className={filters.parkingType === "lot" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "lot")}
+                  >
+                    🅿️ Parking Lot
+                  </button>
+                  <button
+                    className={filters.parkingType === "street" ? "selected" : ""}
+                    onClick={() => handleFilterChange("parkingType", "street")}
+                  >
+                    🛣️ Street Parking
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="reset-button" onClick={resetFilters}>
+                Reset All Filters
+              </button>
+              <button className="apply-button" onClick={closeModal}>
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Info Modal */}
+      {openDropdown === "info" && (
+        <>
+          <div className="modal-overlay" onClick={closeModal}></div>
+          <div className="info-modal">
+            <div className="modal-header">
+              <h2>Information</h2>
+              <button className="close-modal" onClick={closeModal}>✕</button>
+            </div>
+            <div className="info-content">
+              <button className="info-item">About</button>
+              <button className="info-item">Help</button>
+              <button className="info-item">Contact</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Loading map...</div>
         </div>
+      )}
 
-        <div style={{ marginBottom: "1.5rem" }}>
-          <label style={{ 
-            display: "block", 
-            marginBottom: "0.5rem",
-            fontWeight: "500",
-            color: "#333"
-          }}>
-            Availability:
-          </label>
-          <select 
-            value={filters.availability}
-            onChange={(e) => setFilters({...filters, availability: e.target.value})}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "1rem"
-            }}
-          >
-            <option value="all">All Lots</option>
-            <option value="available">Available Now</option>
-            <option value="limited">Limited Spots</option>
-            <option value="full">Full</option>
-          </select>
-        </div>
-
-        <button
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            backgroundColor: "#004d40",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "1rem",
-            fontWeight: "500",
-            cursor: "pointer"
-          }}
-          onClick={() => console.log("Filters applied:", filters)}
-        >
-          Apply Filters
-        </button>
+      {/* Map Background */}
+      <div className="map-container">
+        <iframe 
+          src={
+            filters.mapView === "heatmap"
+              ? "/maps/usf_parking_heatmap.html"
+              : filters.mapView === "streetHours"
+                ? "/maps/street_hours_map.html"
+                : filters.mapView === "combinedView"
+                  ? "/maps/usf_parking_combined.html"
+                  : "/maps/Home_Map.html"
+          } 
+          title="Map" 
+          key={filters.mapView}
+        />
       </div>
     </div>
   );
