@@ -12,7 +12,10 @@ const App = () => {
     mapView: "standard"
   });
   const [loading, setLoading] = useState(false);
-  const [mapKey, setMapKey] = useState(0); // new state to force iframe reload
+  const [regenerating, setRegenerating] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [lastUpdateCombined, setLastUpdateCombined] = useState(null);
+  const [mapKey, setMapKey] = useState(Date.now());
 
   const handleMapChange = (newView) => {
     setLoading(true);
@@ -20,15 +23,89 @@ const App = () => {
       ...prev,
       mapView: newView
     }));
-    setMapKey(prev => prev + 1); // increment key to force reload
+    setMapKey(Date.now());
+  };
+
+  const regenerateMap = async () => {
+    setRegenerating(true);
+    try {
+      const response = await fetch('http://127.0.0.1:5001/api/regenerate-map', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Map regenerated:', data.timestamp);
+        setLastUpdate(data.timestamp);
+        
+        setTimeout(() => {
+          setMapKey(Date.now());
+          
+          setTimeout(() => {
+            setRegenerating(false);
+          }, 1500);
+        }, 1000);
+      } else {
+        console.error('❌ Failed to regenerate map:', data.error);
+        setRegenerating(false);
+      }
+    } catch (error) {
+      console.error('❌ Error calling regenerate API:', error);
+      setRegenerating(false);
+    }
+  };
+
+  const regenerateCombinedMap = async () => {
+    setRegenerating(true);
+    try {
+      const response = await fetch('http://127.0.0.1:5001/api/regenerate-combined-map', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Combined map regenerated:', data.timestamp);
+        setLastUpdateCombined(data.timestamp);
+        
+        setTimeout(() => {
+          setMapKey(Date.now());
+          
+          setTimeout(() => {
+            setRegenerating(false);
+          }, 1500);
+        }, 1000);
+      } else {
+        console.error('❌ Failed to regenerate combined map:', data.error);
+        setRegenerating(false);
+      }
+    } catch (error) {
+      console.error('❌ Error calling regenerate combined API:', error);
+      setRegenerating(false);
+    }
   };
 
   useEffect(() => {
     const iframe = document.querySelector(".map-container iframe");
     if (iframe) {
-      iframe.onload = () => setLoading(false); // hide loading when map is ready
+      iframe.onload = () => setTimeout(() => setLoading(false), 500);
     }
-  }, [mapKey]);
+  }, [filters.mapView, mapKey]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -71,7 +148,7 @@ const App = () => {
       parkingType: "all",
       mapView: "standard"
     });
-    handleMapChange("standard"); // reset map too
+    handleMapChange("standard");
   };
 
   const defaultMap = "/maps/Home_Map.html";
@@ -153,6 +230,82 @@ const App = () => {
                     🔗 Combined View
                   </button>
                 </div>
+
+                {/* Regenerate Button - Street Parking Hours */}
+                {filters.mapView === "streetHours" && (
+                  <div style={{ marginTop: '15px' }}>
+                    <button
+                      className="regenerate-button"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        regenerateMap(); 
+                      }}
+                      disabled={regenerating}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: regenerating ? '#ccc' : '#00695c',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: regenerating ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      {regenerating ? '🔄 Updating...' : '🔄 Update to Current Time'}
+                    </button>
+                    {lastUpdate && (
+                      <div style={{
+                        marginTop: '8px',
+                        fontSize: '11px',
+                        color: '#666',
+                        textAlign: 'center'
+                      }}>
+                        Last updated: {lastUpdate}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Regenerate Button - Combined View */}
+                {filters.mapView === "combinedView" && (
+                  <div style={{ marginTop: '15px' }}>
+                    <button
+                      className="regenerate-button"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        regenerateCombinedMap(); 
+                      }}
+                      disabled={regenerating}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: regenerating ? '#ccc' : '#00695c',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: regenerating ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      {regenerating ? '🔄 Updating...' : '🔄 Update to Current Time'}
+                    </button>
+                    {lastUpdateCombined && (
+                      <div style={{
+                        marginTop: '8px',
+                        fontSize: '11px',
+                        color: '#666',
+                        textAlign: 'center'
+                      }}>
+                        Last updated: {lastUpdateCombined}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Availability */}
@@ -227,61 +380,63 @@ const App = () => {
       )}
 
       {/* Risk Check Modal */}
-{openDropdown === "risk" && (
-  <>
-    <div className="modal-overlay" onClick={closeModal}></div>
-    <div className="filter-modal risk-modal">
-      <div className="modal-header">
-        <h2>Risk Check</h2>
-        <button className="close-modal" onClick={closeModal}>✕</button>
-      </div>
-      <div className="filter-grid">
-        <div className="filter-section">
-          <div className="section-title">Enter Address</div>
-          <input
-            type="text"
-            placeholder="123 Main St, City, State"
-            style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "1rem" }}
-          />
-          <button
-            className="apply-button"
-            onClick={() => {
-              const address = document.querySelector(".risk-modal input").value;
-              console.log("Send to backend:", address);
-              // TODO: Call backend API to get lat/lon and feed to model
-              closeModal();
-            }}
-          >
-            Submit
-          </button>
-        </div>
-      </div>
-    </div>
-  </>
-)}
+      {openDropdown === "risk" && (
+        <>
+          <div className="modal-overlay" onClick={closeModal}></div>
+          <div className="filter-modal risk-modal">
+            <div className="modal-header">
+              <h2>Risk Check</h2>
+              <button className="close-modal" onClick={closeModal}>✕</button>
+            </div>
+            <div className="filter-grid">
+              <div className="filter-section">
+                <div className="section-title">Enter Address</div>
+                <input
+                  type="text"
+                  placeholder="123 Main St, City, State"
+                  style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "1rem" }}
+                />
+                <button
+                  className="apply-button"
+                  onClick={() => {
+                    const address = document.querySelector(".risk-modal input").value;
+                    console.log("Send to backend:", address);
+                    // TODO: Call backend API to get lat/lon and feed to model
+                    closeModal();
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Loading Overlay */}
-      {loading && (
+      {(loading || regenerating) && (
         <div className="loading-overlay">
           <div className="loading-spinner"></div>
-          <div className="loading-text">Loading map...</div>
+          <div className="loading-text">
+            {regenerating ? 'Regenerating map with current time...' : 'Loading map...'}
+          </div>
         </div>
       )}
 
       {/* Map Background */}
       <div className="map-container">
         <iframe 
+          key={`${filters.mapView}-${mapKey}`}
           src={
             filters.mapView === "heatmap"
               ? "/maps/usf_parking_heatmap.html"
               : filters.mapView === "streetHours"
-                ? "/maps/usf_parking_current_status.html"
+                ? `/maps/usf_parking_current_status.html?t=${mapKey}`
                 : filters.mapView === "combinedView"
-                  ? "/maps/usf_parking_combined.html"
+                  ? `/maps/usf_parking_combined.html?t=${mapKey}`
                   : defaultMap
           }
           title="Map"
-          key={mapKey}
         />
       </div>
     </div>
