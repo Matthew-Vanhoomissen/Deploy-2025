@@ -1,39 +1,419 @@
-body, html {
+/* Import a nice font */
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: "Inter", sans-serif;
-  background-color: #f3f4f6;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Lexend Deca', sans-serif;
 }
 
 .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-}
-
-.app-header {
-  background-color: #004d40;
   color: white;
-  text-align: center;
-  padding: 1rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.map-container {
-  flex: 1;
+/* Floating rounded top bar */
+.app-header {
+  height: 90px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 2rem;
+  background: rgba(0, 77, 64, 0.55);
+  backdrop-filter: blur(15px);
+  border-radius: 2.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: fixed;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  z-index: 20;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.map-container > div {
-  height: 90%;
-  width: 95%;
-  border-radius: 12px;
+/* Re-enable pointer events on interactive elements */
+.header-left,
+.tab-bar {
+  pointer-events: auto;
+}
+
+/* Left side with logo + title */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Logo circle */
+.app-logo {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.app-logo:hover {
+  transform: rotate(5deg) scale(1.05);
+}
+
+.app-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Title text */
+.app-title {
+  font-size: 21px;
+  font-weight: 600;
+  margin: 0;
+  color: #e8f5f3;
+  transition: color 0.3s ease;
+}
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  align-items: center;
+  isolation: isolate;
+}
+
+/* Base tab styling */
+.tab {
+  position: relative;
+  padding: 0.55rem 1rem;
+  background: rgba(46, 125, 50, 0.55);
+  border-radius: 1.2rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  font-weight: 500;
+}
+
+/* Hover effect with smooth animation */
+.tab:hover {
+  transform: scale(1.14) translateY(-2px);
+  background: rgba(76, 175, 80, 0.9);
+  box-shadow: 0 0 22px rgba(76, 175, 80, 0.55);
+  z-index: 3;
+}
+
+/* Active tab styling */
+.tab.active {
+  background: rgba(76, 175, 80, 0.85);
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+}
+
+/* Dropdown styling with smooth animations */
+.tab-dropdown {
+  display: none;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 30;
+  animation: fadeIn 0.3s ease;
+  pointer-events: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Filter Modal */
+.filter-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 77, 64, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 2rem;
+  padding: 2rem;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+  z-index: 40;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Custom scrollbar for modals */
+.filter-modal::-webkit-scrollbar,
+.info-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.filter-modal::-webkit-scrollbar-track,
+.info-modal::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.filter-modal::-webkit-scrollbar-thumb,
+.info-modal::-webkit-scrollbar-thumb {
+  background: rgba(76, 175, 80, 0.6);
+  border-radius: 10px;
+}
+
+.filter-modal::-webkit-scrollbar-thumb:hover,
+.info-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(76, 175, 80, 0.8);
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #e8f5f3;
+  margin: 0;
+}
+
+.close-modal {
+  all: unset;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(244, 67, 54, 0.2);
+  color: #ff6b6b;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+  background: rgba(244, 67, 54, 0.4);
+  transform: rotate(90deg);
+}
+
+/* Filter Grid */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Filter Section */
+.filter-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.filter-section:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(76, 175, 80, 0.4);
+}
+
+/* Filter Buttons */
+.filter-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-buttons button {
+  all: unset;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
+  text-align: left;
+  border: 2px solid transparent;
+}
+
+.filter-buttons button:hover {
+  background: rgba(76, 175, 80, 0.2);
+  transform: translateX(4px);
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.filter-buttons button.selected {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.6);
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.reset-button,
+.apply-button {
+  all: unset;
+  padding: 0.875rem 2rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.reset-button {
+  background: rgba(244, 67, 54, 0.2);
+  color: #ff6b6b;
+  border: 2px solid rgba(244, 67, 54, 0.3);
+}
+
+.reset-button:hover {
+  background: rgba(244, 67, 54, 0.4);
+  border-color: rgba(244, 67, 54, 0.5);
+  transform: scale(1.05);
+}
+
+.apply-button {
+  background: rgba(76, 175, 80, 0.8);
+  color: white;
+  border: 2px solid rgba(76, 175, 80, 1);
+}
+
+.apply-button:hover {
+  background: rgba(76, 175, 80, 1);
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+/* Info Modal */
+.info-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 77, 64, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 2rem;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  z-index: 40;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-item {
+  all: unset;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  text-align: left;
+  border: 2px solid transparent;
+}
+
+.info-item:hover {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.3);
+  transform: translateX(8px);
+}
+
+/* Fullscreen map behind everything */
+.map-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+.map-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Add subtle entrance animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
