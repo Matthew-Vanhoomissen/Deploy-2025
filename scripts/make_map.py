@@ -217,10 +217,8 @@ for cluster_id in significant_clusters.index:
     print(f"    Top violation: {top_violations.index[0]}")
 
 # Save the heatmap
-m.save("usf_parking_heatmap1.html")
+m.save("usf_parking_heatmap.html")
 print("\n✅ Heatmap saved: usf_parking_heatmap.html")
 print(f"📍 Total tickets mapped: {len(heat_data)}")
 
-folium.Html("usf_parking_current_status.html").add_to(m)
-m.save("usf_combined.html")
-webbrowser.open("usf_combined.html")
+webbrowser.open("usf__parking_heatmap.html")
