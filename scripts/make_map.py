@@ -61,7 +61,88 @@ df = df[df['distance_miles'] <= 1.0]
 print(f"🔍 Filtered to tickets within 1 mile: {len(df)} tickets")
 
 # Create base map
-m = folium.Map(location=usf_center, zoom_start=16)
+m = folium.Map(location=usf_center, zoom_start=16, tiles="OpenStreetMap")
+
+# ✅ Add Search Bar
+folium.plugins.Geocoder(
+    collapsed=False,
+    position='bottomleft',
+    placeholder='Search streets, addresses...'
+).add_to(m)
+
+# ✅ Add custom CSS styling for search bar
+custom_css = """
+<style>
+.leaflet-bottom.leaflet-left {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: 30px !important;
+    z-index: 1000 !important;
+    width: 70% !important;
+    max-width: 900px !important;
+}
+.leaflet-control-geocoder {
+    background: rgba(0, 77, 64, 0.55) !important;
+    backdrop-filter: blur(15px) !important;
+    border-radius: 2.5rem !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    border: none !important;
+    padding: 10px 18px !important;
+    width: 100% !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.leaflet-control-geocoder-form {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.leaflet-control-geocoder-form input {
+    flex: 1 !important;
+    width: 100% !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    border: none !important;
+    border-radius: 1.5rem !important;
+    padding: 10px 14px !important;
+    font-size: 1.1rem !important;
+    color: #f1f1f1 !important;
+    outline: none !important;
+}
+.leaflet-control-geocoder-form input::placeholder {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+.leaflet-control-geocoder-icon {
+    all: unset !important;
+    width: 24px !important;
+    height: 24px !important;
+    filter: brightness(1.4);
+}
+.leaflet-control-geocoder-alternatives {
+    max-height: 150px !important;
+    overflow-y: auto !important;
+    background: rgba(0, 77, 64, 0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 1rem !important;
+    margin-top: 8px !important;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4) !important;
+}
+.leaflet-control-geocoder-alternatives li {
+    padding: 8px 14px !important;
+    font-size: 1rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 0.5rem !important;
+    transition: background 0.2s ease !important;
+}
+.leaflet-control-geocoder-alternatives li:hover {
+    background: rgba(76, 175, 80, 0.25) !important;
+    cursor: pointer !important;
+}
+</style>
+"""
+m.get_root().html.add_child(folium.Element(custom_css))
 
 # Prepare data for heatmap
 heat_data = [[row['latitude'], row['longitude']] for idx, row in df.iterrows()]
@@ -136,7 +217,7 @@ for cluster_id in significant_clusters.index:
     print(f"    Top violation: {top_violations.index[0]}")
 
 # Save the heatmap
-m.save("usf_parking_heatmap.html")
+m.save("usf_parking_heatmap1.html")
 print("\n✅ Heatmap saved: usf_parking_heatmap.html")
 print(f"📍 Total tickets mapped: {len(heat_data)}")
 
