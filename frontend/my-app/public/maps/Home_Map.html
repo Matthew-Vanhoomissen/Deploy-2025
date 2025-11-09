@@ -12,18 +12,33 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
-    
-    <meta name="viewport" content="width=device-width,
-                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <style>
-        html, body, #map_510ae797b68df6f4631d3536a57d9f44 {
+        html, body {
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
         }
-
+        #map_a6d4daa7559d4d19bb2fd3bd59cbbf3c {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            left: 0%;
+            top: 0%;
+        }
+        .leaflet-container { font-size: 1rem; }
+        #map {
+            position:absolute;
+            top:0;
+            bottom:0;
+            right:0;
+            left:0;
+        }
         .leaflet-bottom.leaflet-left {
             left: 50% !important;
             transform: translateX(-50%) !important;
@@ -32,103 +47,80 @@
             width: 70% !important;
             max-width: 900px !important;
         }
-
         .leaflet-control-geocoder {
-            background: rgba(0, 77, 64, 0.7) !important;
-            backdrop-filter: blur(12px) !important;
-            border-radius: 2rem !important;
+            background: rgba(0, 77, 64, 0.55) !important;
+            backdrop-filter: blur(15px) !important;
+            border-radius: 2.5rem !important;
             padding: 10px 18px !important;
-            display: flex !important;
-            align-items: center !important;
             width: 100% !important;
             height: 60px !important;
-            box-shadow: none !important;
+            display: flex !important;
+            align-items: center !important;
         }
-
         .leaflet-control-geocoder-form {
             width: 100% !important;
             display: flex !important;
-            align-items: center !important;
             gap: 10px !important;
         }
-
         .leaflet-control-geocoder-form input {
             flex: 1 !important;
-            width: 100% !important;
-            background: rgba(255,255,255,0.25) !important;
-            border: none !important;
-            outline: none !important;
+            background: rgba(255, 255, 255, 0.25) !important;
             border-radius: 1.5rem !important;
             padding: 10px 14px !important;
             font-size: 1.1rem !important;
-            color: #fff !important;
-            transition: all 0.3s ease;
+            color: #f1f1f1 !important;
         }
-
         .leaflet-control-geocoder-form input::placeholder {
-            color: rgba(255,255,255,0.85) !important;
+            color: rgba(255, 255, 255, 0.85) !important;
         }
-
+        .leaflet-control-geocoder-icon {
+            display: none !important;
+        }
         .leaflet-control-geocoder-alternatives {
-            display: none !important; /* hide default dropdown */
+            max-height: 150px !important;
+            overflow-y: auto !important;
+            background: rgba(0, 77, 64, 0.85) !important;
+            border-radius: 1rem !important;
+        }
+        .leaflet-control-geocoder-alternatives li:hover {
+            background: rgba(76, 175, 80, 0.25) !important;
         }
     </style>
 
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+    <script>
+        L_NO_TOUCH = false;
+        L_DISABLE_3D = false;
+    </script>
 </head>
 <body>
-    <div id="map_510ae797b68df6f4631d3536a57d9f44"></div>
+    <div class="folium-map" id="map_a6d4daa7559d4d19bb2fd3bd59cbbf3c"></div>
 
     <script>
-var map = L.map("map_510ae797b68df6f4631d3536a57d9f44", {
-    center: [37.7763, -122.4505],
-    zoom: 16,
-    zoomControl: true
-});
+        var map_a6d4daa7559d4d19bb2fd3bd59cbbf3c = L.map(
+            "map_a6d4daa7559d4d19bb2fd3bd59cbbf3c",
+            {
+                center: [37.7763, -122.4505],
+                crs: L.CRS.EPSG3857,
+                zoom: 16,
+                zoomControl: true,
+                preferCanvas: false
+            }
+        );
 
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19
-}).addTo(map);
+        var geocoder = L.Control.Geocoder.nominatim();
+        var control = L.Control.geocoder({
+            collapsed: false,
+            position: "bottomleft",
+            placeholder: "Search streets, addresses...",
+            geocoder: geocoder
+        }).addTo(map_a6d4daa7559d4d19bb2fd3bd59cbbf3c);
 
-var geocoder = L.Control.Geocoder.nominatim();
-var control = L.Control.geocoder({
-    collapsed: false,
-    position: "bottomleft",
-    placeholder: "Search streets, addresses...",
-    geocoder: geocoder
-}).addTo(map);
-
-var resultMarkers = [];
-
-// Listen for Enter key on the input
-var inputField = document.querySelector('.leaflet-control-geocoder-form input');
-inputField.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault(); // prevent form submission
-        var query = inputField.value;
-        if (!query) return;
-
-        geocoder.geocode(query, function(results) {
-            // Remove previous markers
-            resultMarkers.forEach(m => map.removeLayer(m));
-            resultMarkers = [];
-
-            // Take top 3 results
-            results.slice(0,3).forEach((res, index) => {
-                var latlng = res.center;
-                var display_name = res.name || res.html || res.properties?.display_name;
-
-                var marker = L.marker(latlng).addTo(map);
-                marker.bindPopup(`<b>Result ${index+1}:</b> ${display_name}`).openPopup();
-                resultMarkers.push(marker);
-            });
-
-            if (results[0]) map.setView(results[0].center, 16);
-        });
-    }
-});
-</script>
+        // Default OSM tile layer (can remove/change to other later)
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            minZoom: 0,
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map_a6d4daa7559d4d19bb2fd3bd59cbbf3c);
+    </script>
 </body>
 </html>

@@ -24,7 +24,7 @@ const App = () => {
   useEffect(() => {
     const iframe = document.querySelector(".map-container iframe");
     if (iframe) {
-      iframe.onload = () => setLoading(false, 2000); // hide loading when map is ready
+      iframe.onload = () => setLoading(false); // hide loading when map is ready
     }
   }, [filters.mapView]);
 
@@ -77,7 +77,7 @@ const App = () => {
       <header className="app-header">
         <div className="header-left">
           <div className="app-logo">
-            <img src="/logo1.png" alt="Logo" />
+            <img src="/logo3.png" alt="Logo" />
           </div>
           <h1 className="app-title">Dons Parking Support</h1>
         </div>
@@ -100,6 +100,12 @@ const App = () => {
           >
             Info
           </div>
+          <div
+            className={`tab ${openDropdown === "risk" ? "active" : ""}`}
+            onClick={() => handleTabClick("risk")}
+          >
+            Risk Check
+          </div>
         </div>
       </header>
 
@@ -114,6 +120,7 @@ const App = () => {
             </div>
             
             <div className="filter-grid">
+              {/* Map View */}
               <div className="filter-section">
                 <div className="section-title">Map View</div>
                 <div className="filter-buttons">
@@ -299,6 +306,42 @@ const App = () => {
         </>
       )}
 
+      {/* Risk Check Modal */}
+      {openDropdown === "risk" && (
+        <>
+          <div className="modal-overlay" onClick={closeModal}></div>
+          <div className="info-modal">
+            <div className="modal-header">
+              <h2>Risk Check</h2>
+              <button className="close-modal" onClick={closeModal}>✕</button>
+            </div>
+            <div className="info-content">
+              <label htmlFor="risk-address" style={{color: '#e8f5f3', fontWeight: 500, marginBottom: '0.5rem'}}>
+                Enter Address:
+              </label>
+              <input
+                id="risk-address"
+                type="text"
+                placeholder="123 Main St, City, State"
+                className="risk-input"
+              />
+              <button
+                className="apply-button"
+                style={{marginTop: '1rem'}}
+                onClick={() => {
+                  const address = document.getElementById("risk-address").value;
+                  console.log("Send to backend:", address);
+                  // TODO: Call backend API to get lat/lon and feed to model
+                  closeModal();
+                }}
+              >
+                Check Risk
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Loading Overlay */}
       {loading && (
         <div className="loading-overlay">
@@ -314,7 +357,7 @@ const App = () => {
             filters.mapView === "heatmap"
               ? "/maps/usf_parking_heatmap.html"
               : filters.mapView === "streetHours"
-                ? "/maps/street_hours_map.html"
+                ? "/maps/usf_parking_current_status.html"
                 : filters.mapView === "combinedView"
                   ? "/maps/usf_parking_combined.html"
                   : "/maps/Home_Map.html"
