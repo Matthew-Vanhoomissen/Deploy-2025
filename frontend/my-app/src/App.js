@@ -12,13 +12,15 @@ const App = () => {
     mapView: "standard"
   });
   const [loading, setLoading] = useState(false);
+  const [mapKey, setMapKey] = useState(0); // new state to force iframe reload
 
   const handleMapChange = (newView) => {
-    setLoading(true); // show loading overlay
+    setLoading(true);
     setFilters(prev => ({
       ...prev,
       mapView: newView
     }));
+    setMapKey(prev => prev + 1); // increment key to force reload
   };
 
   useEffect(() => {
@@ -26,11 +28,11 @@ const App = () => {
     if (iframe) {
       iframe.onload = () => setLoading(false); // hide loading when map is ready
     }
-  }, [filters.mapView]);
+  }, [mapKey]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".tab") && !e.target.closest(".filter-modal") && !e.target.closest(".info-modal")) {
+      if (!e.target.closest(".tab") && !e.target.closest(".filter-modal") && !e.target.closest(".info-modal") && !e.target.closest(".risk-modal")) {
         setOpenDropdown(null);
       }
     };
@@ -54,11 +56,11 @@ const App = () => {
   };
 
   const handleFilterChange = (filterType, value) => {
-    setFilters(prev => ({
+    if (filterType === "mapView") handleMapChange(value);
+    else setFilters(prev => ({
       ...prev,
       [filterType]: value
     }));
-    if (filterType === "mapView") handleMapChange(value);
   };
 
   const resetFilters = () => {
@@ -69,14 +71,17 @@ const App = () => {
       parkingType: "all",
       mapView: "standard"
     });
+    handleMapChange("standard"); // reset map too
   };
+
+  const defaultMap = "/maps/Home_Map.html";
 
   return (
     <div className="app-container">
       {/* Floating Header */}
       <header className="app-header">
         <div className="header-left">
-          <div className="app-logo">
+          <div className="app-logo" onClick={() => handleMapChange("standard")}>
             <img src="/logo3.png" alt="Logo" />
           </div>
           <h1 className="app-title">Dons Parking Support</h1>
@@ -118,7 +123,6 @@ const App = () => {
               <h2>Filter Parking Spots</h2>
               <button className="close-modal" onClick={closeModal}>✕</button>
             </div>
-            
             <div className="filter-grid">
               {/* Map View */}
               <div className="filter-section">
@@ -155,24 +159,9 @@ const App = () => {
               <div className="filter-section">
                 <div className="section-title">Availability</div>
                 <div className="filter-buttons">
-                  <button
-                    className={filters.availability === "all" ? "selected" : ""}
-                    onClick={() => handleFilterChange("availability", "all")}
-                  >
-                    All Spots
-                  </button>
-                  <button
-                    className={filters.availability === "available" ? "selected" : ""}
-                    onClick={() => handleFilterChange("availability", "available")}
-                  >
-                    Available Only
-                  </button>
-                  <button
-                    className={filters.availability === "occupied" ? "selected" : ""}
-                    onClick={() => handleFilterChange("availability", "occupied")}
-                  >
-                    Occupied
-                  </button>
+                  <button className={filters.availability === "all" ? "selected" : ""} onClick={() => handleFilterChange("availability", "all")}>All Spots</button>
+                  <button className={filters.availability === "available" ? "selected" : ""} onClick={() => handleFilterChange("availability", "available")}>Available Only</button>
+                  <button className={filters.availability === "occupied" ? "selected" : ""} onClick={() => handleFilterChange("availability", "occupied")}>Occupied</button>
                 </div>
               </div>
 
@@ -180,36 +169,11 @@ const App = () => {
               <div className="filter-section">
                 <div className="section-title">Price Range</div>
                 <div className="filter-buttons">
-                  <button
-                    className={filters.priceRange === "all" ? "selected" : ""}
-                    onClick={() => handleFilterChange("priceRange", "all")}
-                  >
-                    All Prices
-                  </button>
-                  <button
-                    className={filters.priceRange === "free" ? "selected" : ""}
-                    onClick={() => handleFilterChange("priceRange", "free")}
-                  >
-                    Free
-                  </button>
-                  <button
-                    className={filters.priceRange === "low" ? "selected" : ""}
-                    onClick={() => handleFilterChange("priceRange", "low")}
-                  >
-                    $ Low ($0-5)
-                  </button>
-                  <button
-                    className={filters.priceRange === "medium" ? "selected" : ""}
-                    onClick={() => handleFilterChange("priceRange", "medium")}
-                  >
-                    $ Medium ($5-15)
-                  </button>
-                  <button
-                    className={filters.priceRange === "high" ? "selected" : ""}
-                    onClick={() => handleFilterChange("priceRange", "high")}
-                  >
-                    $$ High ($15+)
-                  </button>
+                  <button className={filters.priceRange === "all" ? "selected" : ""} onClick={() => handleFilterChange("priceRange", "all")}>All Prices</button>
+                  <button className={filters.priceRange === "free" ? "selected" : ""} onClick={() => handleFilterChange("priceRange", "free")}>Free</button>
+                  <button className={filters.priceRange === "low" ? "selected" : ""} onClick={() => handleFilterChange("priceRange", "low")}>$ Low ($0-5)</button>
+                  <button className={filters.priceRange === "medium" ? "selected" : ""} onClick={() => handleFilterChange("priceRange", "medium")}>$ Medium ($5-15)</button>
+                  <button className={filters.priceRange === "high" ? "selected" : ""} onClick={() => handleFilterChange("priceRange", "high")}>$$ High ($15+)</button>
                 </div>
               </div>
 
@@ -217,30 +181,10 @@ const App = () => {
               <div className="filter-section">
                 <div className="section-title">Distance</div>
                 <div className="filter-buttons">
-                  <button
-                    className={filters.distance === "all" ? "selected" : ""}
-                    onClick={() => handleFilterChange("distance", "all")}
-                  >
-                    Any Distance
-                  </button>
-                  <button
-                    className={filters.distance === "near" ? "selected" : ""}
-                    onClick={() => handleFilterChange("distance", "near")}
-                  >
-                    Within 0.5 mi
-                  </button>
-                  <button
-                    className={filters.distance === "medium" ? "selected" : ""}
-                    onClick={() => handleFilterChange("distance", "medium")}
-                  >
-                    Within 1 mi
-                  </button>
-                  <button
-                    className={filters.distance === "far" ? "selected" : ""}
-                    onClick={() => handleFilterChange("distance", "far")}
-                  >
-                    Within 2 mi
-                  </button>
+                  <button className={filters.distance === "all" ? "selected" : ""} onClick={() => handleFilterChange("distance", "all")}>Any Distance</button>
+                  <button className={filters.distance === "near" ? "selected" : ""} onClick={() => handleFilterChange("distance", "near")}>Within 0.5 mi</button>
+                  <button className={filters.distance === "medium" ? "selected" : ""} onClick={() => handleFilterChange("distance", "medium")}>Within 1 mi</button>
+                  <button className={filters.distance === "far" ? "selected" : ""} onClick={() => handleFilterChange("distance", "far")}>Within 2 mi</button>
                 </div>
               </div>
 
@@ -248,41 +192,17 @@ const App = () => {
               <div className="filter-section">
                 <div className="section-title">Parking Type</div>
                 <div className="filter-buttons">
-                  <button
-                    className={filters.parkingType === "all" ? "selected" : ""}
-                    onClick={() => handleFilterChange("parkingType", "all")}
-                  >
-                    All Types
-                  </button>
-                  <button
-                    className={filters.parkingType === "garage" ? "selected" : ""}
-                    onClick={() => handleFilterChange("parkingType", "garage")}
-                  >
-                    🏢 Garage
-                  </button>
-                  <button
-                    className={filters.parkingType === "lot" ? "selected" : ""}
-                    onClick={() => handleFilterChange("parkingType", "lot")}
-                  >
-                    🅿️ Parking Lot
-                  </button>
-                  <button
-                    className={filters.parkingType === "street" ? "selected" : ""}
-                    onClick={() => handleFilterChange("parkingType", "street")}
-                  >
-                    🛣️ Street Parking
-                  </button>
+                  <button className={filters.parkingType === "all" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "all")}>All Types</button>
+                  <button className={filters.parkingType === "garage" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "garage")}>🏢 Garage</button>
+                  <button className={filters.parkingType === "lot" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "lot")}>🅿️ Parking Lot</button>
+                  <button className={filters.parkingType === "street" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "street")}>🛣️ Street Parking</button>
                 </div>
               </div>
             </div>
 
             <div className="modal-actions">
-              <button className="reset-button" onClick={resetFilters}>
-                Reset All Filters
-              </button>
-              <button className="apply-button" onClick={closeModal}>
-                Apply Filters
-              </button>
+              <button className="reset-button" onClick={resetFilters}>Reset All Filters</button>
+              <button className="apply-button" onClick={closeModal}>Apply Filters</button>
             </div>
           </div>
         </>
@@ -307,40 +227,38 @@ const App = () => {
       )}
 
       {/* Risk Check Modal */}
-      {openDropdown === "risk" && (
-        <>
-          <div className="modal-overlay" onClick={closeModal}></div>
-          <div className="info-modal">
-            <div className="modal-header">
-              <h2>Risk Check</h2>
-              <button className="close-modal" onClick={closeModal}>✕</button>
-            </div>
-            <div className="info-content">
-              <label htmlFor="risk-address" style={{color: '#e8f5f3', fontWeight: 500, marginBottom: '0.5rem'}}>
-                Enter Address:
-              </label>
-              <input
-                id="risk-address"
-                type="text"
-                placeholder="123 Main St, City, State"
-                className="risk-input"
-              />
-              <button
-                className="apply-button"
-                style={{marginTop: '1rem'}}
-                onClick={() => {
-                  const address = document.getElementById("risk-address").value;
-                  console.log("Send to backend:", address);
-                  // TODO: Call backend API to get lat/lon and feed to model
-                  closeModal();
-                }}
-              >
-                Check Risk
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+{openDropdown === "risk" && (
+  <>
+    <div className="modal-overlay" onClick={closeModal}></div>
+    <div className="filter-modal risk-modal">
+      <div className="modal-header">
+        <h2>Risk Check</h2>
+        <button className="close-modal" onClick={closeModal}>✕</button>
+      </div>
+      <div className="filter-grid">
+        <div className="filter-section">
+          <div className="section-title">Enter Address</div>
+          <input
+            type="text"
+            placeholder="123 Main St, City, State"
+            style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "1rem" }}
+          />
+          <button
+            className="apply-button"
+            onClick={() => {
+              const address = document.querySelector(".risk-modal input").value;
+              console.log("Send to backend:", address);
+              // TODO: Call backend API to get lat/lon and feed to model
+              closeModal();
+            }}
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
       {/* Loading Overlay */}
       {loading && (
@@ -360,10 +278,10 @@ const App = () => {
                 ? "/maps/usf_parking_current_status.html"
                 : filters.mapView === "combinedView"
                   ? "/maps/usf_parking_combined.html"
-                  : "/maps/Home_Map.html"
-          } 
-          title="Map" 
-          key={filters.mapView}
+                  : defaultMap
+          }
+          title="Map"
+          key={mapKey}
         />
       </div>
     </div>
