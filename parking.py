@@ -6,12 +6,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.ensemble import GradientBoostingClassifier
 from xgboost import XGBClassifier
 import datetime
-import random
-
-# Looks at the current hour and current day of week.
-# If you are in a peak hour AND peak day (most tickets historically happen then), the score is multiplied by 1.5.
-# If you are in a peak hour OR peak day, it’s multiplied by 1.2.
-# Then capped at 100.
+import re
 
 app = Flask(__name__, static_folder="frontend/my-app/build", static_url_path="")
 CORS(app, origins=["http://localhost:3000"])
@@ -24,8 +19,14 @@ with open("data/sf_streets.json", "r") as f:
 # ============================================
 # LOAD AND GEOCODE DATA
 # ============================================
+# Just replace the data loading section at the top of your parking.py:
 
-df = pd.read_csv("citations_geocoded.csv")
+# ============================================
+# LOAD AND GEOCODE DATA
+# ============================================
+
+# Make sure this matches your CSV filename exactly
+df = pd.read_csv("citations_with_zones.csv")  # Change if your file has a different name
 
 # Ensure lat/lon columns exist
 if "latitude" not in df.columns:
@@ -35,13 +36,27 @@ if "longitude" not in df.columns:
 
 # Convert issue_datetime to datetime object
 if "issue_datetime" not in df.columns:
-    # Combine issue_date + issue_time if issue_datetime is missing
     df['issue_datetime'] = pd.to_datetime(df['issue_date'] + " " + df['issue_time'])
 else:
     df['issue_datetime'] = pd.to_datetime(df['issue_datetime'])
 
 df = df.dropna(subset=["latitude", "longitude"])
 df = df.sort_values('issue_datetime')
+
+# Pre-normalize addresses for better performance
+if 'address' in df.columns:
+    def normalize_addr(addr):
+        addr = str(addr).lower()
+        addr = re.sub(r'\.', '', addr)  # remove periods
+        addr = addr.replace("street", "st").replace("avenue", "ave").replace("road", "rd")
+        addr = re.sub(r'[^a-z0-9 ]', '', addr)  # keep letters, numbers, space
+        addr = addr.strip()
+        return addr
+    
+    df['address_normalized'] = df['address'].apply(normalize_addr)
+    print(f"✓ Loaded {len(df)} citations with addresses")
+else:
+    print("WARNING: 'address' column not found in CSV!")
 
 # ============================================
 # CREATE ZONES USING DBSCAN
@@ -113,7 +128,7 @@ print(f"✓ Data period: {total_days} days")
 def categorize_risk(score):
     if score < 10:
         return "Low", "#00FF00", "✅ Safe to park here"
-    elif score > 10 and score  < 30:
+    elif 10 <= score < 30:
         return "Medium", "#FFA500", "⚠️ Park with caution"
     else:
         return "High", "#FF0000", "🚨 Avoid parking here"
@@ -235,6 +250,108 @@ def get_danger_zones():
 
     zones_list.sort(key=lambda x: x['risk_score'], reverse=True)
     return jsonify({'timestamp': now.isoformat(), 'danger_zones': zones_list[:5]})
+
+# ============================================
+# STREET INFO ENDPOINT (substring search with robust normalization)
+# ============================================
+
+def normalize_addr(addr):
+    addr = str(addr).lower()
+    addr = re.sub(r'\.', '', addr)  # remove periods
+    addr = addr.replace("street", "st").replace("avenue", "ave").replace("road", "rd")
+    addr = re.sub(r'[^a-z0-9 ]', '', addr)  # keep letters, numbers, space
+    addr = addr.strip()
+    return addr
+
+@app.route('/zone-info/<street_name>')
+def zone_info(street_name):
+    # Normalize the input street name
+    def normalize_addr(addr):
+        addr = str(addr).lower()
+        addr = re.sub(r'\.', '', addr)  # remove periods
+        addr = addr.replace("street", "st").replace("avenue", "ave").replace("road", "rd")
+        addr = re.sub(r'[^a-z0-9 ]', '', addr)  # keep letters, numbers, space
+        addr = addr.strip()
+        return addr
+    
+    street_name_norm = normalize_addr(street_name)
+
+    if 'address' not in df.columns:
+        return jsonify({'error': 'Address column not found in dataset'}), 500
+
+    # Check if normalized addresses exist, if not create them
+    if 'address_normalized' not in df.columns:
+        df['address_normalized'] = df['address'].apply(normalize_addr)
+
+    # Find matches using substring search
+    matches = df[df['address_normalized'].str.contains(street_name_norm, na=False, regex=False)]
+
+    if matches.empty:
+        return jsonify({
+            'error': f'Street "{street_name}" not found in dataset',
+            'suggestion': 'Try a different street name or check spelling'
+        }), 404
+
+    # Get the zone_id from the first match
+    zone_id = int(matches.iloc[0]['zone_id'])
+    
+    # Handle noise points (zone_id = -1)
+    if zone_id == -1:
+        return jsonify({
+            'error': 'This street is not in a high-citation zone',
+            'zone_id': -1,
+            'risk_level': 'Low',
+            'recommendation': '✅ This area has very few citations',
+            'total_tickets': len(matches),
+            'message': 'Not enough citation data to create a risk zone here'
+        }), 200
+
+    if zone_id not in zone_stats.index:
+        return jsonify({'error': 'Zone statistics not available'}), 404
+
+    stats = zone_stats.loc[zone_id]
+
+    # Get current time for peak time calculation
+    now = datetime.datetime.now()
+    hour = now.hour
+    dayofweek = now.weekday()
+    
+    # Calculate adjusted risk score based on current time
+    adjusted_score = float(stats['base_risk_score'])
+    is_peak_hour = abs(hour - stats['peak_hour']) <= 1
+    is_peak_day = dayofweek == stats['peak_day']
+
+    if is_peak_hour and is_peak_day:
+        adjusted_score *= 1.5
+    elif is_peak_hour or is_peak_day:
+        adjusted_score *= 1.2
+    adjusted_score = min(100, adjusted_score)
+
+    risk_level, risk_color, recommendation = categorize_risk(adjusted_score)
+
+    return jsonify({
+        'zone_id': zone_id,
+        'risk_score': round(adjusted_score, 1),
+        'risk_level': risk_level,
+        'risk_color': risk_color,
+        'recommendation': recommendation,
+        'is_peak_time': bool(is_peak_hour and is_peak_day),
+        'peak_info': {
+            'hour': int(stats['peak_hour']),
+            'day': ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][int(stats['peak_day'])]
+        },
+        'total_tickets': int(stats['total_tickets']),
+        'tickets_per_day': round(float(stats['tickets_per_day']), 2),
+        'location': {
+            'latitude': float(stats['latitude']),
+            'longitude': float(stats['longitude'])
+        },
+        'matched_address': matches.iloc[0]['address'],  # Show what address was matched
+        'timestamp': now.isoformat()
+    })
+# ============================================
+# Serve React
+# ============================================
 
 @app.route('/')
 def serve_react():
