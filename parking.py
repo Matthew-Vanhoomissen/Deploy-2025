@@ -128,7 +128,7 @@ print(f"✓ Data period: {total_days} days")
 def categorize_risk(score):
     if score < 10:
         return "Low", "#00FF00", "✅ Safe to park here"
-    elif 10 <= score < 30:
+    elif 10 <= score < 40:
         return "Medium", "#FFA500", "⚠️ Park with caution"
     else:
         return "High", "#FF0000", "🚨 Avoid parking here"
@@ -301,6 +301,7 @@ def zone_info(street_name):
             'error': 'This street is not in a high-citation zone',
             'zone_id': -1,
             'risk_level': 'Low',
+            'risk_color': '#00FF00',
             'recommendation': '✅ This area has very few citations',
             'total_tickets': len(matches),
             'message': 'Not enough citation data to create a risk zone here'
@@ -340,13 +341,16 @@ def zone_info(street_name):
             'hour': int(stats['peak_hour']),
             'day': ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][int(stats['peak_day'])]
         },
-        'total_tickets': int(stats['total_tickets']),
-        'tickets_per_day': round(float(stats['tickets_per_day']), 2),
+        'statistics': {
+            'total_tickets': int(stats['total_tickets']),
+            'tickets_per_day': round(float(stats['tickets_per_day']), 2),
+            'data_period_days': total_days
+        },
         'location': {
             'latitude': float(stats['latitude']),
             'longitude': float(stats['longitude'])
         },
-        'matched_address': matches.iloc[0]['address'],  # Show what address was matched
+        'matched_address': matches.iloc[0]['address'],
         'timestamp': now.isoformat()
     })
 # ============================================

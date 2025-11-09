@@ -258,54 +258,120 @@ const App = () => {
                   color:'#e8f5f3',
                   backgroundColor: 'rgba(255,255,255,0.05)',
                   padding: '1rem',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  border: `2px solid ${riskResult.risk_color || '#00FF00'}`
                 }}>
                   <h3 style={{
                     color: riskResult.risk_color || '#00FF00', 
-                    marginBottom: '0.5rem',
-                    fontSize: '1.2rem'
+                    marginBottom: '0.75rem',
+                    fontSize: '1.3rem',
+                    fontWeight: 'bold'
                   }}>
                     {riskResult.recommendation || 'Risk analysis complete'}
                   </h3>
                   
-                  <div style={{marginBottom: '0.5rem'}}>
-                    <strong>Zone ID:</strong> {riskResult.zone_id}
-                  </div>
-                  
-                  <div style={{marginBottom: '0.5rem'}}>
-                    <strong>Risk Score:</strong> {riskResult.risk_score} / 100 ({riskResult.risk_level})
+                  <div style={{
+                    marginBottom: '0.75rem', 
+                    padding: '0.5rem',
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    borderRadius: '4px'
+                  }}>
+                    <div style={{marginBottom: '0.3rem'}}>
+                      <strong>Zone ID:</strong> {riskResult.zone_id}
+                    </div>
+                    <div style={{marginBottom: '0.3rem'}}>
+                      <strong>Risk Score:</strong> <span style={{
+                        color: riskResult.risk_color,
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem'
+                      }}>{riskResult.risk_score}</span> / 100
+                    </div>
+                    <div>
+                      <strong>Risk Level:</strong> <span style={{color: riskResult.risk_color}}>{riskResult.risk_level}</span>
+                    </div>
                   </div>
                   
                   {riskResult.matched_address && (
-                    <div style={{marginBottom: '0.5rem'}}>
-                      <strong>Matched Address:</strong> {riskResult.matched_address}
+                    <div style={{
+                      marginBottom: '0.75rem',
+                      padding: '0.5rem',
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                      borderRadius: '4px'
+                    }}>
+                      <strong>📍 Matched Address:</strong>
+                      <div style={{marginTop: '0.25rem'}}>{riskResult.matched_address}</div>
                     </div>
                   )}
                   
                   {riskResult.peak_info && (
-                    <div style={{marginBottom: '0.5rem'}}>
-                      <strong>Peak Time:</strong> {riskResult.is_peak_time ? "⚠️ Yes - High Risk Now!" : "✅ No"} 
-                      <br/>
-                      <span style={{fontSize: '0.9rem', opacity: 0.8}}>
-                        (Peak: {riskResult.peak_info.day}s around {riskResult.peak_info.hour}:00)
-                      </span>
+                    <div style={{
+                      marginBottom: '0.75rem',
+                      padding: '0.5rem',
+                      backgroundColor: riskResult.is_peak_time 
+                        ? 'rgba(255,0,0,0.1)' 
+                        : 'rgba(0,255,0,0.05)',
+                      borderRadius: '4px',
+                      border: riskResult.is_peak_time 
+                        ? '1px solid rgba(255,0,0,0.3)' 
+                        : '1px solid rgba(0,255,0,0.2)'
+                    }}>
+                      <div style={{marginBottom: '0.25rem'}}>
+                        <strong>⏰ Peak Time Status:</strong> {riskResult.is_peak_time ? "⚠️ YES - High Risk NOW!" : "✅ No - Safe Time"}
+                      </div>
+                      <div style={{fontSize: '0.9rem', opacity: 0.8}}>
+                        Most tickets on <strong>{riskResult.peak_info.day}s</strong> around <strong>{riskResult.peak_info.hour}:00</strong>
+                      </div>
                     </div>
                   )}
                   
-                  {riskResult.total_tickets !== undefined && (
-                    <div style={{marginBottom: '0.5rem'}}>
-                      <strong>Statistics:</strong>
-                      <br/>
-                      <span style={{fontSize: '0.9rem', opacity: 0.8}}>
-                        {riskResult.total_tickets} total tickets 
-                        {riskResult.tickets_per_day && ` (${riskResult.tickets_per_day} per day)`}
-                      </span>
+                  {riskResult.statistics && (
+                    <div style={{
+                      marginBottom: '0.75rem',
+                      padding: '0.5rem',
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                      borderRadius: '4px'
+                    }}>
+                      <div style={{marginBottom: '0.3rem'}}>
+                        <strong>📊 Statistics:</strong>
+                      </div>
+                      <div style={{fontSize: '0.95rem', paddingLeft: '0.5rem'}}>
+                        <div style={{marginBottom: '0.2rem'}}>
+                          • Total Tickets: <strong>{riskResult.statistics.total_tickets}</strong>
+                        </div>
+                        <div style={{marginBottom: '0.2rem'}}>
+                          • Per Day: <strong>{riskResult.statistics.tickets_per_day}</strong> tickets/day
+                        </div>
+                        <div>
+                          • Data Period: <strong>{riskResult.statistics.data_period_days}</strong> days
+                        </div>
+                      </div>
                     </div>
                   )}
                   
                   {riskResult.location && (
-                    <div style={{fontSize: '0.85rem', opacity: 0.7, marginTop: '0.5rem'}}>
-                      <strong>Location:</strong> {riskResult.location.latitude.toFixed(4)}, {riskResult.location.longitude.toFixed(4)}
+                    <div style={{
+                      fontSize: '0.85rem', 
+                      opacity: 0.7, 
+                      marginTop: '0.5rem',
+                      padding: '0.5rem',
+                      backgroundColor: 'rgba(0,0,0,0.2)',
+                      borderRadius: '4px'
+                    }}>
+                      <strong>🗺️ Coordinates:</strong>
+                      <div style={{marginTop: '0.25rem'}}>
+                        {riskResult.location.latitude.toFixed(6)}, {riskResult.location.longitude.toFixed(6)}
+                      </div>
+                    </div>
+                  )}
+
+                  {riskResult.timestamp && (
+                    <div style={{
+                      fontSize: '0.75rem', 
+                      opacity: 0.5, 
+                      marginTop: '0.5rem',
+                      textAlign: 'center'
+                    }}>
+                      Analysis time: {new Date(riskResult.timestamp).toLocaleString()}
                     </div>
                   )}
                 </div>
