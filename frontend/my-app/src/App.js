@@ -155,6 +155,16 @@ const App = () => {
     handleMapChange("standard");
   };
 
+  const handleLogoClick = () => {
+  setFilters(prev => ({
+    ...prev,
+    mapView: "standard" // Reset to standard map
+  }));
+  setMapKey(Date.now()); // Force iframe reload
+  setActiveTab("map");   // Close any open dropdowns
+  setOpenDropdown(null);
+};
+
   // Risk Check API call
   const handleRiskCheck = async () => {
     const addressInput = document.getElementById("risk-address").value.trim();
@@ -193,10 +203,10 @@ const App = () => {
       {/* Floating Header */}
       <header className="app-header">
         <div className="header-left">
-          <div className="app-logo">
-            <img src="/logo3.png" alt="Logo" />
-          </div>
-          <h1 className="app-title">Dons Parking Support</h1>
+          <div className="app-logo" onClick={handleLogoClick} style={{ cursor: "pointer" }}>
+                <img src="/logo3.png" alt="Logo" />
+        </div>
+          <h1 className="app-title">Park-A-Don</h1>
         </div>
         <div className="tab-bar">
           <div className={`tab ${activeTab === "map" ? "active" : ""}`} onClick={() => handleTabClick("map")}>Map</div>
