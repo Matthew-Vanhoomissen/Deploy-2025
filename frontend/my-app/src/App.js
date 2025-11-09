@@ -16,6 +16,10 @@ const App = () => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [lastUpdateCombined, setLastUpdateCombined] = useState(null);
   const [mapKey, setMapKey] = useState(Date.now());
+// Risk Check States
+  const [riskResult, setRiskResult] = useState(null);
+  const [riskLoading, setRiskLoading] = useState(false);
+  const [riskError, setRiskError] = useState(null);
 
   const handleMapChange = (newView) => {
     setLoading(true);
@@ -151,6 +155,37 @@ const App = () => {
     handleMapChange("standard");
   };
 
+  // Risk Check API call
+  const handleRiskCheck = async () => {
+    const addressInput = document.getElementById("risk-address").value.trim();
+    if (!addressInput) {
+      setRiskError("Please enter a street name");
+      return;
+    }
+
+    setRiskLoading(true);
+    setRiskError(null);
+    setRiskResult(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5001/zone-info/${encodeURIComponent(addressInput)}`
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        setRiskError(data.error || "Error fetching risk data");
+      } else {
+        setRiskResult(data);
+      }
+    } catch (err) {
+      setRiskError("Server error: " + err.message);
+    } finally {
+      setRiskLoading(false);
+    }
+  };
+
+
   const defaultMap = "/maps/Home_Map.html";
 
   return (
@@ -158,36 +193,16 @@ const App = () => {
       {/* Floating Header */}
       <header className="app-header">
         <div className="header-left">
-          <div className="app-logo" onClick={() => handleMapChange("standard")}>
+          <div className="app-logo">
             <img src="/logo3.png" alt="Logo" />
           </div>
           <h1 className="app-title">Dons Parking Support</h1>
         </div>
         <div className="tab-bar">
-          <div
-            className={`tab ${activeTab === "map" ? "active" : ""}`}
-            onClick={() => handleTabClick("map")}
-          >
-            Map
-          </div>
-          <div
-            className={`tab ${openDropdown === "filters" ? "active" : ""}`}
-            onClick={() => handleTabClick("filters")}
-          >
-            Filters
-          </div>
-          <div
-            className={`tab ${openDropdown === "info" ? "active" : ""}`}
-            onClick={() => handleTabClick("info")}
-          >
-            Info
-          </div>
-          <div
-            className={`tab ${openDropdown === "risk" ? "active" : ""}`}
-            onClick={() => handleTabClick("risk")}
-          >
-            Risk Check
-          </div>
+          <div className={`tab ${activeTab === "map" ? "active" : ""}`} onClick={() => handleTabClick("map")}>Map</div>
+          <div className={`tab ${openDropdown === "filters" ? "active" : ""}`} onClick={() => handleTabClick("filters")}>Filters</div>
+          <div className={`tab ${openDropdown === "info" ? "active" : ""}`} onClick={() => handleTabClick("info")}>Info</div>
+          <div className={`tab ${openDropdown === "risk" ? "active" : ""}`} onClick={() => handleTabClick("risk")}>Risk Check</div>
         </div>
       </header>
 
@@ -209,25 +224,25 @@ const App = () => {
                     className={filters.mapView === "standard" ? "selected" : ""}
                     onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "standard"); }}
                   >
-                    🗺️ Standard Map
+                     Standard Map
                   </button>
                   <button
                     className={filters.mapView === "heatmap" ? "selected" : ""}
                     onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "heatmap"); }}
                   >
-                    🔥 Heatmap View
+                     Heatmap View
                   </button>
                   <button
                     className={filters.mapView === "streetHours" ? "selected" : ""}
                     onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "streetHours"); }}
                   >
-                    🛣️ Street Parking Hours
+                     Street Parking Hours
                   </button>
                   <button
                     className={filters.mapView === "combinedView" ? "selected" : ""}
                     onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "combinedView"); }}
                   >
-                    🔗 Combined View
+                     Combined View
                   </button>
                 </div>
 
@@ -342,15 +357,7 @@ const App = () => {
               </div>
 
               {/* Parking Type */}
-              <div className="filter-section">
-                <div className="section-title">Parking Type</div>
-                <div className="filter-buttons">
-                  <button className={filters.parkingType === "all" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "all")}>All Types</button>
-                  <button className={filters.parkingType === "garage" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "garage")}>🏢 Garage</button>
-                  <button className={filters.parkingType === "lot" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "lot")}>🅿️ Parking Lot</button>
-                  <button className={filters.parkingType === "street" ? "selected" : ""} onClick={() => handleFilterChange("parkingType", "street")}>🛣️ Street Parking</button>
-                </div>
-              </div>
+              
             </div>
 
             <div className="modal-actions">
@@ -379,39 +386,180 @@ const App = () => {
         </>
       )}
 
-      {/* Risk Check Modal */}
-      {openDropdown === "risk" && (
-        <>
-          <div className="modal-overlay" onClick={closeModal}></div>
-          <div className="filter-modal risk-modal">
-            <div className="modal-header">
-              <h2>Risk Check</h2>
-              <button className="close-modal" onClick={closeModal}>✕</button>
-            </div>
-            <div className="filter-grid">
-              <div className="filter-section">
-                <div className="section-title">Enter Address</div>
-                <input
-                  type="text"
-                  placeholder="123 Main St, City, State"
-                  style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "1rem" }}
-                />
-                <button
-                  className="apply-button"
-                  onClick={() => {
-                    const address = document.querySelector(".risk-modal input").value;
-                    console.log("Send to backend:", address);
-                    // TODO: Call backend API to get lat/lon and feed to model
-                    closeModal();
-                  }}
-                >
-                  Submit
-                </button>
+ {/* Risk Check Modal */}
+{openDropdown === "risk" && (
+  <>
+    <div className="modal-overlay" onClick={closeModal}></div>
+    <div className="info-modal">
+      <div className="modal-header">
+        <h2>Risk Check</h2>
+        <button className="close-modal" onClick={closeModal}>✕</button>
+      </div>
+      <div className="info-content">
+        <label 
+          htmlFor="risk-address" 
+          style={{color: '#e8f5f3', fontWeight: 500, marginBottom: '0.5rem', display: 'block'}}
+        >
+          Enter Street Name:
+        </label>
+        <input 
+          id="risk-address" 
+          type="text" 
+          placeholder="Example: MASON ST or howard street" 
+          className="risk-input"
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') handleRiskCheck();
+          }}
+        />
+        <button 
+          className="apply-button" 
+          style={{marginTop:'1rem', width: 'auto', minWidth: '150px'}}
+          onClick={handleRiskCheck}
+          disabled={riskLoading}
+        >
+          {riskLoading ? "Checking..." : "Check Risk"}
+        </button>
+        
+        {riskError && (
+          <div style={{
+            color:'#ff6b6b', 
+            marginTop:'1rem', 
+            padding: '0.5rem',
+            backgroundColor: 'rgba(255,107,107,0.1)',
+            borderRadius: '4px'
+          }}>
+            {riskError}
+          </div>
+        )}
+        
+        {riskResult && (
+          <div style={{
+            marginTop:'1rem', 
+            color:'#e8f5f3',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            padding: '1rem',
+            borderRadius: '8px',
+            border: `2px solid ${riskResult.risk_color || '#00FF00'}`
+          }}>
+            <h3 style={{
+              color: riskResult.risk_color || '#00FF00', 
+              marginBottom: '0.75rem',
+              fontSize: '1.3rem',
+              fontWeight: 'bold'
+            }}>
+              {riskResult.recommendation || 'Risk analysis complete'}
+            </h3>
+            
+            <div style={{
+              marginBottom: '0.75rem', 
+              padding: '0.5rem',
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              borderRadius: '4px'
+            }}>
+              <div style={{marginBottom: '0.3rem'}}>
+                <strong>Zone ID:</strong> {riskResult.zone_id}
+              </div>
+              <div style={{marginBottom: '0.3rem'}}>
+                <strong>Risk Score:</strong> <span style={{
+                  color: riskResult.risk_color,
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem'
+                }}>{riskResult.risk_score}</span> / 100
+              </div>
+              <div>
+                <strong>Risk Level:</strong> <span style={{color: riskResult.risk_color}}>{riskResult.risk_level}</span>
               </div>
             </div>
+            
+            {riskResult.matched_address && (
+              <div style={{
+                marginBottom: '0.75rem',
+                padding: '0.5rem',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                borderRadius: '4px'
+              }}>
+                <strong>📍 Matched Address:</strong>
+                <div style={{marginTop: '0.25rem'}}>{riskResult.matched_address}</div>
+              </div>
+            )}
+            
+            {riskResult.peak_info && (
+              <div style={{
+                marginBottom: '0.75rem',
+                padding: '0.5rem',
+                backgroundColor: riskResult.is_peak_time 
+                  ? 'rgba(255,0,0,0.1)' 
+                  : 'rgba(0,255,0,0.05)',
+                borderRadius: '4px',
+                border: riskResult.is_peak_time 
+                  ? '1px solid rgba(255,0,0,0.3)' 
+                  : '1px solid rgba(0,255,0,0.2)'
+              }}>
+                <div style={{marginBottom: '0.25rem'}}>
+                  <strong>⏰ Peak Time Status:</strong> {riskResult.is_peak_time ? "⚠️ YES - High Risk NOW!" : "✅ No - Safe Time"}
+                </div>
+                <div style={{fontSize: '0.9rem', opacity: 0.8}}>
+                  Most tickets on <strong>{riskResult.peak_info.day}s</strong> around <strong>{riskResult.peak_info.hour}:00</strong>
+                </div>
+              </div>
+            )}
+            
+            {riskResult.statistics && (
+              <div style={{
+                marginBottom: '0.75rem',
+                padding: '0.5rem',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                borderRadius: '4px'
+              }}>
+                <div style={{marginBottom: '0.3rem'}}>
+                  <strong>📊 Statistics:</strong>
+                </div>
+                <div style={{fontSize: '0.95rem', paddingLeft: '0.5rem'}}>
+                  <div style={{marginBottom: '0.2rem'}}>
+                    • Total Tickets: <strong>{riskResult.statistics.total_tickets}</strong>
+                  </div>
+                  <div style={{marginBottom: '0.2rem'}}>
+                    • Per Day: <strong>{riskResult.statistics.tickets_per_day}</strong> tickets/day
+                  </div>
+                  <div>
+                    • Data Period: <strong>{riskResult.statistics.data_period_days}</strong> days
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {riskResult.location && (
+              <div style={{
+                fontSize: '0.85rem', 
+                opacity: 0.7, 
+                marginTop: '0.5rem',
+                padding: '0.5rem',
+                backgroundColor: 'rgba(0,0,0,0.2)',
+                borderRadius: '4px'
+              }}>
+                <strong>🗺️ Coordinates:</strong>
+                <div style={{marginTop: '0.25rem'}}>
+                  {riskResult.location.latitude.toFixed(6)}, {riskResult.location.longitude.toFixed(6)}
+                </div>
+              </div>
+            )}
+
+            {riskResult.timestamp && (
+              <div style={{
+                fontSize: '0.75rem', 
+                opacity: 0.5, 
+                marginTop: '0.5rem',
+                textAlign: 'center'
+              }}>
+                Analysis time: {new Date(riskResult.timestamp).toLocaleString()}
+              </div>
+            )}
           </div>
-        </>
-      )}
+        )}
+      </div>
+    </div>
+  </>
+)}
 
       {/* Loading Overlay */}
       {(loading || regenerating) && (
