@@ -11,6 +11,22 @@ const App = () => {
     parkingType: "all",
     mapView: "standard"
   });
+  const [loading, setLoading] = useState(false);
+
+  const handleMapChange = (newView) => {
+    setLoading(true); // show loading overlay
+    setFilters(prev => ({
+      ...prev,
+      mapView: newView
+    }));
+  };
+
+  useEffect(() => {
+    const iframe = document.querySelector(".map-container iframe");
+    if (iframe) {
+      iframe.onload = () => setLoading(false, 2000); // hide loading when map is ready
+    }
+  }, [filters.mapView]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -23,7 +39,6 @@ const App = () => {
   }, []);
 
   const handleTabClick = (tab) => {
-    console.log("Tab clicked:", tab, "Current openDropdown:", openDropdown);
     if (tab === "map") {
       setActiveTab("map");
       setOpenDropdown(null);
@@ -43,6 +58,7 @@ const App = () => {
       ...prev,
       [filterType]: value
     }));
+    if (filterType === "mapView") handleMapChange(value);
   };
 
   const resetFilters = () => {
@@ -103,25 +119,32 @@ const App = () => {
                 <div className="filter-buttons">
                   <button
                     className={filters.mapView === "standard" ? "selected" : ""}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFilterChange("mapView", "standard");
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "standard"); }}
                   >
                     🗺️ Standard Map
                   </button>
                   <button
                     className={filters.mapView === "heatmap" ? "selected" : ""}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFilterChange("mapView", "heatmap");
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "heatmap"); }}
                   >
                     🔥 Heatmap View
+                  </button>
+                  <button
+                    className={filters.mapView === "streetHours" ? "selected" : ""}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "streetHours"); }}
+                  >
+                    🛣️ Street Parking Hours
+                  </button>
+                  <button
+                    className={filters.mapView === "combinedView" ? "selected" : ""}
+                    onClick={(e) => { e.stopPropagation(); handleFilterChange("mapView", "combinedView"); }}
+                  >
+                    🔗 Combined View
                   </button>
                 </div>
               </div>
 
+              {/* Availability */}
               <div className="filter-section">
                 <div className="section-title">Availability</div>
                 <div className="filter-buttons">
@@ -146,6 +169,7 @@ const App = () => {
                 </div>
               </div>
 
+              {/* Price Range */}
               <div className="filter-section">
                 <div className="section-title">Price Range</div>
                 <div className="filter-buttons">
@@ -182,6 +206,7 @@ const App = () => {
                 </div>
               </div>
 
+              {/* Distance */}
               <div className="filter-section">
                 <div className="section-title">Distance</div>
                 <div className="filter-buttons">
@@ -212,6 +237,7 @@ const App = () => {
                 </div>
               </div>
 
+              {/* Parking Type */}
               <div className="filter-section">
                 <div className="section-title">Parking Type</div>
                 <div className="filter-buttons">
@@ -269,14 +295,30 @@ const App = () => {
               <button className="info-item">Help</button>
               <button className="info-item">Contact</button>
             </div>
-          </div>ß
+          </div>
         </>
+      )}
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Loading map...</div>
+        </div>
       )}
 
       {/* Map Background */}
       <div className="map-container">
         <iframe 
-          src={filters.mapView === "heatmap" ? "/maps/usf_parking_heatmap.html" : "/maps/Home_Map.html"} 
+          src={
+            filters.mapView === "heatmap"
+              ? "/maps/usf_parking_heatmap.html"
+              : filters.mapView === "streetHours"
+                ? "/maps/street_hours_map.html"
+                : filters.mapView === "combinedView"
+                  ? "/maps/usf_parking_combined.html"
+                  : "/maps/Home_Map.html"
+          } 
           title="Map" 
           key={filters.mapView}
         />

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -14,221 +13,122 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
     
-            <meta name="viewport" content="width=device-width,
+    <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-            <style>
-                #map_232c2c95ff243757b64c39a08b7aa75a {
-                    position: relative;
-                    width: 100.0%;
-                    height: 100.0%;
-                    left: 0.0%;
-                    top: 0.0%;
-                }
-                .leaflet-container { font-size: 1rem; }
-            </style>
 
-            <style>html, body {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-            }
-            </style>
+    <style>
+        html, body, #map_510ae797b68df6f4631d3536a57d9f44 {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
 
-            <style>#map {
-                position:absolute;
-                top:0;
-                bottom:0;
-                right:0;
-                left:0;
-                }
-            </style>
+        .leaflet-bottom.leaflet-left {
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            bottom: 30px !important;
+            z-index: 1000 !important;
+            width: 70% !important;
+            max-width: 900px !important;
+        }
 
-            <script>
-                L_NO_TOUCH = false;
-                L_DISABLE_3D = false;
-            </script>
+        .leaflet-control-geocoder {
+            background: rgba(0, 77, 64, 0.7) !important;
+            backdrop-filter: blur(12px) !important;
+            border-radius: 2rem !important;
+            padding: 10px 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+            height: 60px !important;
+            box-shadow: none !important;
+        }
 
-        
+        .leaflet-control-geocoder-form {
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+
+        .leaflet-control-geocoder-form input {
+            flex: 1 !important;
+            width: 100% !important;
+            background: rgba(255,255,255,0.25) !important;
+            border: none !important;
+            outline: none !important;
+            border-radius: 1.5rem !important;
+            padding: 10px 14px !important;
+            font-size: 1.1rem !important;
+            color: #fff !important;
+            transition: all 0.3s ease;
+        }
+
+        .leaflet-control-geocoder-form input::placeholder {
+            color: rgba(255,255,255,0.85) !important;
+        }
+
+        .leaflet-control-geocoder-alternatives {
+            display: none !important; /* hide default dropdown */
+        }
+    </style>
+
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
 </head>
 <body>
-    
-    
-    <style>
-    /* Center at bottom */
-    .leaflet-bottom.leaflet-left {
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        bottom: 30px !important;
-        z-index: 1000 !important;
-        width: 70% !important;
-        max-width: 900px !important;
+    <div id="map_510ae797b68df6f4631d3536a57d9f44"></div>
+
+    <script>
+var map = L.map("map_510ae797b68df6f4631d3536a57d9f44", {
+    center: [37.7763, -122.4505],
+    zoom: 16,
+    zoomControl: true
+});
+
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+}).addTo(map);
+
+var geocoder = L.Control.Geocoder.nominatim();
+var control = L.Control.geocoder({
+    collapsed: false,
+    position: "bottomleft",
+    placeholder: "Search streets, addresses...",
+    geocoder: geocoder
+}).addTo(map);
+
+var resultMarkers = [];
+
+// Listen for Enter key on the input
+var inputField = document.querySelector('.leaflet-control-geocoder-form input');
+inputField.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault(); // prevent form submission
+        var query = inputField.value;
+        if (!query) return;
+
+        geocoder.geocode(query, function(results) {
+            // Remove previous markers
+            resultMarkers.forEach(m => map.removeLayer(m));
+            resultMarkers = [];
+
+            // Take top 3 results
+            results.slice(0,3).forEach((res, index) => {
+                var latlng = res.center;
+                var display_name = res.name || res.html || res.properties?.display_name;
+
+                var marker = L.marker(latlng).addTo(map);
+                marker.bindPopup(`<b>Result ${index+1}:</b> ${display_name}`).openPopup();
+                resultMarkers.push(marker);
+            });
+
+            if (results[0]) map.setView(results[0].center, 16);
+        });
     }
-
-    /* Outer container */
-    .leaflet-control-geocoder {
-        background: rgba(0, 77, 64, 0.55) !important;
-        backdrop-filter: blur(15px) !important;
-        border-radius: 2.5rem !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
-        border: none !important;
-        padding: 10px 18px !important;
-        width: 100% !important;
-        height: 60px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-    }
-
-    /* Force inner form to fill entire container */
-    .leaflet-control-geocoder-form {
-        width: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-
-    /* Input field full width */
-    .leaflet-control-geocoder-form input {
-        flex: 1 !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        background: rgba(255, 255, 255, 0.25) !important;
-        border: none !important;
-        border-radius: 1.5rem !important;
-        padding: 10px 14px !important;
-        font-size: 1.1rem !important;
-        color: #f1f1f1 !important;
-        outline: none !important;
-    }
-
-    .leaflet-control-geocoder-form input::placeholder {
-        color: rgba(255, 255, 255, 0.85) !important;
-        font-weight: 400 !important;
-    }
-
-    /* Icon back to default style (no circle, inline) */
-    .leaflet-control-geocoder-icon {
-        all: unset !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 24px !important;
-        height: 24px !important;
-        cursor: pointer !important;
-        filter: brightness(1.4);
-    }
-
-    /* Dropdown styling */
-    .leaflet-control-geocoder-alternatives {
-        max-height: 150px !important;
-        overflow-y: auto !important;
-        background: rgba(0, 77, 64, 0.85) !important;
-        backdrop-filter: blur(10px) !important;
-        border-radius: 1rem !important;
-        margin-top: 8px !important;
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4) !important;
-    }
-
-    .leaflet-control-geocoder-alternatives li {
-        padding: 8px 14px !important;
-        font-size: 1rem !important;
-        color: rgba(255, 255, 255, 0.9) !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-        border-radius: 0.5rem !important;
-        transition: background 0.2s ease !important;
-    }
-
-    .leaflet-control-geocoder-alternatives li:hover {
-        background: rgba(76, 175, 80, 0.25) !important;
-        cursor: pointer !important;
-    }
-
-    /* Scrollbar for dropdown */
-    .leaflet-control-geocoder-alternatives::-webkit-scrollbar {
-        width: 6px !important;
-    }
-    .leaflet-control-geocoder-alternatives::-webkit-scrollbar-thumb {
-        background: rgba(76, 175, 80, 0.6) !important;
-        border-radius: 3px !important;
-    }
-</style>
-
-    
-    
-            <div class="folium-map" id="map_232c2c95ff243757b64c39a08b7aa75a" ></div>
-        
-</body>
-<script>
-    
-    
-            var map_232c2c95ff243757b64c39a08b7aa75a = L.map(
-                "map_232c2c95ff243757b64c39a08b7aa75a",
-                {
-                    center: [37.7763, -122.4505],
-                    crs: L.CRS.EPSG3857,
-                    ...{
-  "zoom": 16,
-  "zoomControl": true,
-  "preferCanvas": false,
-}
-
-                }
-            );
-
-            
-
-        
-    
-            var tile_layer_0ca4c932bb0ab8739bd7ea4adbc12fc5 = L.tileLayer(
-                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {
-  "minZoom": 0,
-  "maxZoom": 19,
-  "maxNativeZoom": 19,
-  "noWrap": false,
-  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
-  "subdomains": "abc",
-  "detectRetina": false,
-  "tms": false,
-  "opacity": 1,
-}
-
-            );
-        
-    
-            tile_layer_0ca4c932bb0ab8739bd7ea4adbc12fc5.addTo(map_232c2c95ff243757b64c39a08b7aa75a);
-        
-    
-
-            var geocoderOpts_geocoder_d278c2e4169d64c24cdb3392bf4e1dec = {
-  "collapsed": false,
-  "position": "bottomleft",
-  "defaultMarkGeocode": true,
-  "zoom": 11,
-  "provider": "nominatim",
-  "providerOptions": {
-},
-  "placeholder": "Search streets, addresses...",
-};
-
-            // note: geocoder name should start with lowercase
-            var geocoderName_geocoder_d278c2e4169d64c24cdb3392bf4e1dec = geocoderOpts_geocoder_d278c2e4169d64c24cdb3392bf4e1dec["provider"];
-
-            var customGeocoder_geocoder_d278c2e4169d64c24cdb3392bf4e1dec = L.Control.Geocoder[ geocoderName_geocoder_d278c2e4169d64c24cdb3392bf4e1dec ](
-                geocoderOpts_geocoder_d278c2e4169d64c24cdb3392bf4e1dec['providerOptions']
-            );
-            geocoderOpts_geocoder_d278c2e4169d64c24cdb3392bf4e1dec["geocoder"] = customGeocoder_geocoder_d278c2e4169d64c24cdb3392bf4e1dec;
-
-            L.Control.geocoder(
-                geocoderOpts_geocoder_d278c2e4169d64c24cdb3392bf4e1dec
-            ).on('markgeocode', function(e) {
-                var zoom = geocoderOpts_geocoder_d278c2e4169d64c24cdb3392bf4e1dec['zoom'] || map_232c2c95ff243757b64c39a08b7aa75a.getZoom();
-                map_232c2c95ff243757b64c39a08b7aa75a.setView(e.geocode.center, zoom);
-            }).addTo(map_232c2c95ff243757b64c39a08b7aa75a);
-
-        
+});
 </script>
+</body>
 </html>
