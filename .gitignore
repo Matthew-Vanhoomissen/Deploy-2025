@@ -1,0 +1,17 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node
+node_modules/
+frontend/my-app/build/
+
+# Generated data cache
+data/citations_cache.csv
+
+# macOS
+.DS_Store
